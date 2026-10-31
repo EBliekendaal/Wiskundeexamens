@@ -224,7 +224,7 @@
     </div>
     <div class="no-print" style="display:flex;gap:8px;flex-wrap:wrap">
       <button class="btn ghost" id="resetEx">↺ Voorbeeld uit lesstof (600 kg)</button>
-      <button class="btn" onclick="window.print()">🖨️ Print / PDF</button>
+      <button class="btn" id="printBtn" onclick="window.print()">🖨️ Print / PDF</button>
     </div>
   </div>
 
@@ -667,6 +667,7 @@ $('checkEx').addEventListener('click',checkExercise);
 $('showEx').addEventListener('click',showSolution);
 
 /* ---------- start ---------- */
+try{ if(window.self!==window.top) $('printBtn').style.display='none'; }catch(e){ $('printBtn').style.display='none'; }
 weightEst();
 loadExample();
 newExercise();
