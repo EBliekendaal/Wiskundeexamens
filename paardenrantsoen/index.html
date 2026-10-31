@@ -1,0 +1,675 @@
+<!DOCTYPE html>
+<html lang="nl">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Rantsoencalculator Paard – stap voor stap (CVB)</title>
+<style>
+  :root{
+    --bg:#f6f3ec; --card:#fffdf8; --ink:#2b2a26; --muted:#6f6a5e; --line:#e4ddcc;
+    --green:#3f7d4e; --green-soft:#e3f0e4; --hay:#c99a2e; --hay-soft:#fbf1d6;
+    --red:#b8432f; --red-soft:#f8e1dc; --blue:#2f6690; --blue-soft:#e0ecf5;
+    --brown:#6b4a2b; --radius:16px; --shadow:0 2px 10px rgba(60,45,20,.08);
+  }
+  *{box-sizing:border-box}
+  body{margin:0;font-family:system-ui,-apple-system,"Segoe UI",Roboto,sans-serif;background:var(--bg);color:var(--ink);line-height:1.5}
+  header{background:linear-gradient(135deg,#6b4a2b,#8c6a3f 60%,#c99a2e);color:#fff;padding:28px 20px 70px}
+  header .wrap{max-width:1180px;margin:0 auto}
+  header h1{margin:0;font-size:clamp(1.5rem,3vw,2.2rem)}
+  header p{margin:6px 0 0;opacity:.92;max-width:760px}
+  .tabs{max-width:1180px;margin:-46px auto 0;padding:0 20px;display:flex;gap:8px;flex-wrap:wrap}
+  .tab{border:0;background:rgba(255,255,255,.25);color:#fff;padding:10px 16px;border-radius:12px 12px 0 0;font-weight:600;cursor:pointer;font-size:.95rem}
+  .tab.active{background:var(--bg);color:var(--brown)}
+  main{max-width:1180px;margin:0 auto;padding:20px}
+  .page{display:none}.page.active{display:block}
+  .grid{display:grid;grid-template-columns:380px 1fr;gap:20px;align-items:start}
+  @media(max-width:920px){.grid{grid-template-columns:1fr}}
+  .card{background:var(--card);border:1px solid var(--line);border-radius:var(--radius);box-shadow:var(--shadow);padding:18px 18px 14px;margin-bottom:18px}
+  .card h2{margin:0 0 10px;font-size:1.1rem;display:flex;align-items:center;gap:8px;color:var(--brown)}
+  .card h3{margin:14px 0 6px;font-size:.98rem}
+  label{display:block;font-size:.85rem;font-weight:600;color:var(--muted);margin:10px 0 3px}
+  input,select{width:100%;padding:8px 10px;border:1px solid var(--line);border-radius:10px;font-size:.95rem;background:#fff;color:var(--ink)}
+  input:focus,select:focus{outline:2px solid var(--hay);border-color:var(--hay)}
+  .row{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+  .row3{display:grid;grid-template-columns:1fr 1fr 1fr;gap:8px}
+  .hint{font-size:.78rem;color:var(--muted);margin-top:3px}
+  .btn{border:0;background:var(--green);color:#fff;padding:9px 14px;border-radius:10px;font-weight:600;cursor:pointer;font-size:.9rem}
+  .btn.ghost{background:transparent;color:var(--green);border:1px solid var(--green)}
+  .btn.small{padding:5px 10px;font-size:.8rem}
+  .btn:hover{filter:brightness(1.08)}
+  details.helper{background:var(--hay-soft);border-radius:10px;padding:8px 10px;margin-top:8px}
+  details.helper summary{cursor:pointer;font-weight:600;font-size:.85rem;color:var(--brown)}
+  input[type=range]{padding:0;accent-color:var(--green)}
+  .chip{display:inline-block;padding:2px 9px;border-radius:999px;font-size:.78rem;font-weight:700}
+  .chip.ok{background:var(--green-soft);color:var(--green)}
+  .chip.warn{background:var(--hay-soft);color:#8a6410}
+  .chip.bad{background:var(--red-soft);color:var(--red)}
+  /* summary tiles */
+  .tiles{display:grid;grid-template-columns:repeat(4,1fr);gap:12px;margin-bottom:18px}
+  @media(max-width:700px){.tiles{grid-template-columns:repeat(2,1fr)}}
+  .tile{background:var(--card);border:1px solid var(--line);border-radius:14px;padding:12px 14px;box-shadow:var(--shadow)}
+  .tile .k{font-size:.78rem;color:var(--muted);font-weight:600;text-transform:uppercase;letter-spacing:.03em}
+  .tile .v{font-size:1.5rem;font-weight:800;margin-top:2px}
+  .tile .s{font-size:.8rem;color:var(--muted)}
+  /* steps */
+  .step{display:grid;grid-template-columns:44px 1fr;gap:12px;padding:14px 0;border-top:1px dashed var(--line)}
+  .step:first-of-type{border-top:0}
+  .num{width:40px;height:40px;border-radius:50%;background:var(--brown);color:#fff;display:flex;align-items:center;justify-content:center;font-weight:800}
+  .step h3{margin:6px 0 6px}
+  .calc{font-family:ui-monospace,"Cascadia Mono",Consolas,monospace;background:#f3efe4;border-left:4px solid var(--hay);border-radius:8px;padding:8px 12px;margin:6px 0;font-size:.9rem;overflow-x:auto;white-space:nowrap}
+  .calc .res{font-weight:800;color:var(--green)}
+  .frac{display:inline-flex;flex-direction:column;vertical-align:middle;text-align:center;margin:0 3px}
+  .frac>span:first-child{border-bottom:1.5px solid currentColor;padding:0 4px}
+  .frac>span:last-child{padding:0 4px}
+  .why{font-size:.86rem;color:var(--muted);margin:4px 0}
+  table{width:100%;border-collapse:collapse;font-size:.92rem}
+  th,td{padding:7px 8px;border-bottom:1px solid var(--line);text-align:right}
+  th:first-child,td:first-child{text-align:left}
+  th{background:#f1ebdc;color:var(--brown);font-size:.82rem}
+  tr.total td{font-weight:800;border-top:2px solid var(--brown)}
+  .bars{margin-top:8px}
+  .bar{margin:10px 0}
+  .bar .lbl{display:flex;justify-content:space-between;font-size:.85rem;font-weight:600}
+  .track{position:relative;height:16px;background:#ece5d3;border-radius:999px;overflow:hidden;margin-top:4px}
+  .fill{position:absolute;left:0;top:0;bottom:0;border-radius:999px;transition:width .4s}
+  .target{position:absolute;top:-3px;bottom:-3px;width:3px;background:var(--ink)}
+  .alert{border-radius:12px;padding:10px 12px;margin:8px 0;font-size:.9rem;display:flex;gap:8px}
+  .alert.ok{background:var(--green-soft)}.alert.warn{background:var(--hay-soft)}.alert.bad{background:var(--red-soft)}.alert.info{background:var(--blue-soft)}
+  .gauge{position:relative;height:22px;border-radius:999px;background:linear-gradient(90deg,#e8a798 0 10%,#f3d48a 10% 15%,#a8d5ad 15% 50%,#f3d48a 50% 75%,#e8a798 75% 100%);margin:12px 0 4px}
+  .gauge .pin{position:absolute;top:-6px;width:4px;height:34px;background:var(--ink);border-radius:2px;transition:left .4s}
+  .gauge-scale{display:flex;justify-content:space-between;font-size:.72rem;color:var(--muted)}
+  .horse{font-size:2.4rem;line-height:1}
+  .learn h3{color:var(--brown)}
+  .learn dl dt{font-weight:800;margin-top:10px}
+  .learn dl dd{margin:2px 0 0 0;color:#444}
+  .ex input{max-width:160px;display:inline-block}
+  .ex .q{padding:10px 0;border-top:1px dashed var(--line)}
+  .fb{font-weight:700;margin-left:8px}
+  .print-only{display:none}
+  @media print{
+    header,.tabs,.no-print,#pane-inputs{display:none!important}
+    .grid{grid-template-columns:1fr}
+    .card{box-shadow:none;break-inside:avoid}
+    body{background:#fff}
+  }
+</style>
+</head>
+<body>
+<header>
+  <div class="wrap">
+    <div class="horse">🐴🌾</div>
+    <h1>Rantsoencalculator Paard</h1>
+    <p>Bereken stap voor stap een rantsoen volgens de werkwijze van het CVB: <b>ruwvoer als basis</b>, krachtvoer alleen om tekorten aan te vullen. Elke berekening wordt volledig uitgeschreven – ideaal voor mbo Paardenhouderij.</p>
+  </div>
+</header>
+
+<nav class="tabs">
+  <button class="tab active" data-page="calc">🧮 Calculator</button>
+  <button class="tab" data-page="learn">📘 Uitleg &amp; begrippen</button>
+  <button class="tab" data-page="practice">🎯 Oefenen</button>
+</nav>
+
+<main>
+<!-- ========================= CALCULATOR ========================= -->
+<section class="page active" id="page-calc">
+<div class="grid">
+  <!-- INPUTS -->
+  <div id="pane-inputs">
+    <div class="card">
+      <h2>🐎 1. Gegevens van het paard</h2>
+      <label for="naam">Naam paard (optioneel)</label>
+      <input id="naam" placeholder="bijv. Bella">
+      <label for="lg">Lichaamsgewicht (kg)</label>
+      <input id="lg" type="number" min="100" max="1200" step="5" value="600">
+      <details class="helper">
+        <summary>📏 Gewicht schatten met een meetlint</summary>
+        <label for="omvang">Borstomvang (cm)</label>
+        <input id="omvang" type="number" value="190">
+        <label for="lengte">Lichaamslengte (cm, optioneel)</label>
+        <input id="lengte" type="number" placeholder="schouder → zitbeen">
+        <div class="hint" id="weightCalc"></div>
+        <button class="btn small" id="useWeight" style="margin-top:6px">Gebruik dit gewicht</button>
+      </details>
+
+      <label for="bcs">Body Condition Score (schaal 1–9)</label>
+      <select id="bcs">
+        <option value="2">1–2 · zeer mager</option>
+        <option value="3">3 · mager</option>
+        <option value="5" selected>4–6 · ideaal</option>
+        <option value="7">7 · vet</option>
+        <option value="8">8–9 · zeer vet</option>
+      </select>
+      <div class="hint" id="bcsHint"></div>
+
+      <label for="status">Arbeidsniveau / status</label>
+      <select id="status">
+        <option value="onderhoud">Onderhoud (geen arbeid)</option>
+        <option value="licht" selected>Lichte arbeid (1–3 uur/week, rustig)</option>
+        <option value="matig">Matige arbeid (3–5 uur/week, dressuur/springen)</option>
+        <option value="zwaar">Zware arbeid (4–5 uur/week intensief)</option>
+        <option value="zeerzwaar">Zeer zware arbeid (wedstrijd/races)</option>
+        <option value="dracht">Dracht (9e–11e maand)</option>
+        <option value="lactatie">Lactatie (1e–3e maand)</option>
+      </select>
+    </div>
+
+    <div class="card">
+      <h2>📋 2. Behoeftenormen</h2>
+      <p class="hint" style="margin-top:0">Automatisch geschat met een benaderingsformule (zie Uitleg). Heb je de CVB-tabel? Vink aan en vul de tabelwaarden in.</p>
+      <label style="display:flex;gap:8px;align-items:center;font-weight:600;color:var(--ink)"><input type="checkbox" id="manualNorm" style="width:auto"> Eigen normen uit CVB-tabel invullen</label>
+      <div class="row">
+        <div><label for="nEW">EWpa per dag</label><input id="nEW" type="number" step="0.05" disabled></div>
+        <div><label for="nVRE">VREp (g/dag)</label><input id="nVRE" type="number" step="5" disabled></div>
+      </div>
+      <div class="row">
+        <div><label for="nCa">Ca (g/dag)</label><input id="nCa" type="number" step="1" disabled></div>
+        <div><label for="nP">P (g/dag)</label><input id="nP" type="number" step="1" disabled></div>
+      </div>
+      <label for="dsPct">Ruwvoer: drogestof als % van lichaamsgewicht: <b id="dsPctVal">1,5%</b></label>
+      <input id="dsPct" type="range" min="1.2" max="2.0" step="0.1" value="1.5">
+      <div class="hint">Minimaal 1,2–1,5%; optimaal 1,5–2,0% van het lichaamsgewicht.</div>
+    </div>
+
+    <div class="card">
+      <h2>🌾 3. Ruwvoer (analyse)</h2>
+      <label for="rvPreset">Soort ruwvoer</label>
+      <select id="rvPreset"></select>
+      <label for="rvBasis">Analysewaarden zijn uitgedrukt per</label>
+      <select id="rvBasis">
+        <option value="product" selected>kg product</option>
+        <option value="ds">kg droge stof</option>
+      </select>
+      <div class="row">
+        <div><label for="rvDS">Drogestof (%)</label><input id="rvDS" type="number" step="1"></div>
+        <div><label for="rvEW">EWpa / kg</label><input id="rvEW" type="number" step="0.01"></div>
+      </div>
+      <div class="row3">
+        <div><label for="rvVRE">VREp g/kg</label><input id="rvVRE" type="number" step="1"></div>
+        <div><label for="rvCa">Ca g/kg</label><input id="rvCa" type="number" step="0.1"></div>
+        <div><label for="rvP">P g/kg</label><input id="rvP" type="number" step="0.1"></div>
+      </div>
+      <label for="rvRound">Hoeveelheid ruwvoer afronden</label>
+      <select id="rvRound">
+        <option value="0.5" selected>naar boven op 0,5 kg</option>
+        <option value="1">naar boven op hele kg</option>
+        <option value="0.1">op 0,1 kg</option>
+        <option value="manual">zelf invullen…</option>
+      </select>
+      <input id="rvManual" type="number" step="0.1" placeholder="kg product per dag" style="display:none;margin-top:6px">
+    </div>
+
+    <div class="card">
+      <h2>🥣 4. Krachtvoer &amp; aanvulling</h2>
+      <label for="kvPreset">Krachtvoer (etiket)</label>
+      <select id="kvPreset"></select>
+      <div class="row">
+        <div><label for="kvEW">EWpa / kg</label><input id="kvEW" type="number" step="0.01"></div>
+        <div><label for="kvVRE">VREp g/kg</label><input id="kvVRE" type="number" step="1"></div>
+      </div>
+      <div class="row">
+        <div><label for="kvCa">Ca g/kg</label><input id="kvCa" type="number" step="0.1"></div>
+        <div><label for="kvP">P g/kg</label><input id="kvP" type="number" step="0.1"></div>
+      </div>
+      <h3>Balancer / mineralen</h3>
+      <div class="row">
+        <div><label for="balG">Dosering (g/dag)</label><input id="balG" type="number" step="25" value="150"></div>
+        <div><label for="balEW">EWpa / kg</label><input id="balEW" type="number" step="0.01" value="0.75"></div>
+      </div>
+      <div class="row3">
+        <div><label for="balVRE">VREp g/kg</label><input id="balVRE" type="number" value="180"></div>
+        <div><label for="balCa">Ca g/kg</label><input id="balCa" type="number" step="1" value="60"></div>
+        <div><label for="balP">P g/kg</label><input id="balP" type="number" step="1" value="20"></div>
+      </div>
+      <div class="hint">Zet de dosering op 0 als je geen balancer gebruikt.</div>
+    </div>
+    <div class="no-print" style="display:flex;gap:8px;flex-wrap:wrap">
+      <button class="btn ghost" id="resetEx">↺ Voorbeeld uit lesstof (600 kg)</button>
+      <button class="btn" onclick="window.print()">🖨️ Print / PDF</button>
+    </div>
+  </div>
+
+  <!-- OUTPUT -->
+  <div id="pane-out">
+    <div class="tiles" id="tiles"></div>
+    <div class="card"><h2>🧾 Rantsoen per dag <span id="horseTitle" style="font-weight:400;color:var(--muted)"></span></h2><div id="ration"></div></div>
+    <div class="card"><h2>🧮 Berekening stap voor stap</h2><div id="steps"></div></div>
+    <div class="card"><h2>⚖️ Calcium : Fosfor</h2><div id="caP"></div></div>
+    <div class="card"><h2>🩺 Adviezen &amp; controles</h2><div id="advice"></div></div>
+  </div>
+</div>
+</section>
+
+<!-- ========================= UITLEG ========================= -->
+<section class="page learn" id="page-learn">
+  <div class="card">
+    <h2>📘 Werkwijze in het kort</h2>
+    <ol>
+      <li><b>Behoefte</b> bepalen: onderhoud + toeslag voor arbeid, dracht of lactatie (EWpa en VREp).</li>
+      <li><b>Minimale hoeveelheid ruwvoer</b> berekenen in droge stof (≥ 1,5% van het lichaamsgewicht) en omrekenen naar kg product.</li>
+      <li><b>Aanbod ruwvoer</b> berekenen: kg product × gehalte per kg.</li>
+      <li><b>Saldo</b> = aanbod − behoefte. Positief = overschot, negatief = tekort.</li>
+      <li><b>Krachtvoer</b> alleen bij een tekort: tekort ÷ gehalte per kg brok. Geen tekort? Dan alleen een balancer/mineralen + zout.</li>
+      <li><b>Ca : P-verhouding</b> controleren: ideaal 1,5 : 1 tot 2 : 1 (grenzen 1,2 : 1 – 3 : 1).</li>
+    </ol>
+  </div>
+  <div class="card">
+    <h2>📖 Begrippen</h2>
+    <dl>
+      <dt>EWpa – Energiewaarde paard</dt>
+      <dd>De Nederlandse eenheid (CVB) voor netto-energie voor paarden. 1 EWpa komt overeen met de netto-energie van 1 kg standaard gerst. Hooi bevat ongeveer 0,4–0,6 EWpa per kg product.</dd>
+      <dt>VREp – Verteerbaar Ruw Eiwit paard</dt>
+      <dd>Het deel van het eiwit dat het paard daadwerkelijk kan verteren, in grammen. Nodig voor spieren, groei, melk en herstel.</dd>
+      <dt>DS – Droge stof</dt>
+      <dd>Wat er overblijft als je al het water uit het voer haalt. Hooi bevat ± 85% DS, voordroog/kuil 50–70%, vers gras maar 15–25%. Door in DS te rekenen kun je voersoorten eerlijk vergelijken.</dd>
+      <dt>Per kg product ↔ per kg DS</dt>
+      <dd>Gehalte per kg product = gehalte per kg DS × DS-fractie. Voorbeeld: 0,65 EWpa/kg DS × 0,85 = 0,55 EWpa/kg product.</dd>
+      <dt>BCS – Body Condition Score</dt>
+      <dd>Beoordeling van de vetbedekking (schaal 1–9; 5 = ideaal). Te dik: minder energie, maar nóóit onder de 1,5% DS ruwvoer – kies dan energiearm hooi. Te mager: extra energie.</dd>
+      <dt>Metabolisch gewicht (LG<sup>0,75</sup>)</dt>
+      <dd>Energiebehoefte groeit niet evenredig met het gewicht. Een paard dat 2× zo zwaar is heeft geen 2× zoveel energie nodig, maar ongeveer 2<sup>0,75</sup> ≈ 1,68×. Daarom rekent het CVB met LG<sup>0,75</sup>.</dd>
+      <dt>Balancer</dt>
+      <dd>Geconcentreerd supplement (100–200 g/dag) met vitaminen, mineralen en sporenelementen (selenium, koper, zink, vitamine E), vrijwel zonder extra energie.</dd>
+    </dl>
+  </div>
+  <div class="card">
+    <h2>🔢 Gebruikte formules in deze tool</h2>
+    <p><b>Gewicht met meetlint:</b></p>
+    <div class="calc">gewicht ≈ <span class="frac"><span>borstomvang³</span><span>11 877</span></span> &nbsp;&nbsp;of&nbsp;&nbsp; gewicht ≈ <span class="frac"><span>borstomvang² × lengte</span><span>11 880</span></span> &nbsp;(cm → kg)</div>
+    <p><b>Energiebehoefte (benadering CVB-tabel):</b></p>
+    <div class="calc">EWpa onderhoud = 0,0335 × LG<sup>0,75</sup> &nbsp;→&nbsp; EWpa totaal = onderhoud × factor</div>
+    <table style="max-width:560px">
+      <tr><th>Status</th><th>Factor energie</th><th>g VREp per EWpa</th></tr>
+      <tr><td>Onderhoud</td><td>1,00</td><td>75</td></tr>
+      <tr><td>Lichte arbeid</td><td>1,18</td><td>75</td></tr>
+      <tr><td>Matige arbeid</td><td>1,40</td><td>75</td></tr>
+      <tr><td>Zware arbeid</td><td>1,60</td><td>75</td></tr>
+      <tr><td>Zeer zware arbeid</td><td>1,90</td><td>75</td></tr>
+      <tr><td>Dracht 9–11 mnd</td><td>1,20</td><td>90</td></tr>
+      <tr><td>Lactatie 1–3 mnd</td><td>1,70</td><td>105</td></tr>
+    </table>
+    <p class="hint">BCS-correctie: te mager +10% energie, te dik −10% energie. Ca ≈ 4 g en P ≈ 2,8 g per 100 kg LG bij onderhoud, × factor voor arbeid/dracht/lactatie (afgezwakt).<br>
+    ⚠️ Dit zijn <b>benaderingen</b> die uitkomen op de voorbeeldwaarden uit de lesstof (600 kg, lichte arbeid ≈ 4,8 EWpa en 360 g VREp). Gebruik voor officiële opdrachten altijd de actuele CVB-tabel – die kun je in de calculator zelf invullen.</p>
+  </div>
+  <div class="card">
+    <h2>✅ Praktische tips</h2>
+    <ul>
+      <li>Weeg hooinetten en voerscheppen na met een <b>unster</b>: "een schep" kan zomaar 0,6 of 1,2 kg zijn.</li>
+      <li>Max. ± 0,5 kg krachtvoer per 100 kg lichaamsgewicht <b>per maaltijd</b> (zetmeel → koliek/hoefbevangen­heid).</li>
+      <li>Verdeel ruwvoer over de dag; een paard is een "continue eter" (14–16 uur per dag kauwen).</li>
+      <li>Zorg altijd voor vers water en een zoutblok of los zout.</li>
+      <li>Wijzig een rantsoen geleidelijk, verspreid over 7–14 dagen.</li>
+    </ul>
+  </div>
+</section>
+
+<!-- ========================= OEFENEN ========================= -->
+<section class="page" id="page-practice">
+  <div class="card ex">
+    <h2>🎯 Oefencasus</h2>
+    <p class="hint" style="margin-top:0">Reken de casus uit met je rekenmachine. Rond af op 2 decimalen (EWpa) of hele grammen. Een kleine afrondingsmarge is toegestaan.</p>
+    <div id="casus"></div>
+    <div id="questions"></div>
+    <div style="display:flex;gap:8px;margin-top:12px;flex-wrap:wrap">
+      <button class="btn" id="checkEx">Nakijken</button>
+      <button class="btn ghost" id="showEx">Toon uitwerking</button>
+      <button class="btn ghost" id="newEx">🔄 Nieuwe casus</button>
+    </div>
+    <div id="exScore" style="margin-top:10px"></div>
+    <div id="exSolution"></div>
+  </div>
+</section>
+</main>
+
+<script>
+/* ---------- helpers ---------- */
+const $ = id => document.getElementById(id);
+const nf = (x, d=2) => (isFinite(x) ? x : 0).toLocaleString('nl-NL',{minimumFractionDigits:d,maximumFractionDigits:d});
+const frac = (a,b) => `<span class="frac"><span>${a}</span><span>${b}</span></span>`;
+const num = id => parseFloat(String($(id).value).replace(',','.')) || 0;
+const ceilTo = (x, s) => Math.ceil(x/s - 1e-9) * s;
+
+/* ---------- data ---------- */
+const STATUS = {
+  onderhoud:{f:1.00,vre:75,min:1.00,naam:'onderhoud'},
+  licht:{f:1.18,vre:75,min:1.10,naam:'lichte arbeid'},
+  matig:{f:1.40,vre:75,min:1.20,naam:'matige arbeid'},
+  zwaar:{f:1.60,vre:75,min:1.30,naam:'zware arbeid'},
+  zeerzwaar:{f:1.90,vre:75,min:1.40,naam:'zeer zware arbeid'},
+  dracht:{f:1.20,vre:90,min:1.40,naam:'dracht (9–11 mnd)'},
+  lactatie:{f:1.70,vre:105,min:1.80,naam:'lactatie (1–3 mnd)'}
+};
+// waarden per kg product
+const RUWVOER = {
+  hooi:{naam:'Hooi (gemiddeld)',ds:85,ew:0.55,vre:35,ca:3.5,p:2.2},
+  hooiArm:{naam:'Hooi, energiearm (laat gemaaid)',ds:87,ew:0.45,vre:22,ca:3.0,p:1.8},
+  hooiRijk:{naam:'Hooi, jong/rijk',ds:85,ew:0.62,vre:60,ca:4.5,p:2.8},
+  kuilhooi:{naam:'Kuilhooi / haylage (± 65% DS)',ds:65,ew:0.45,vre:40,ca:3.2,p:2.0},
+  voordroog:{naam:'Voordroog (± 50% DS)',ds:50,ew:0.38,vre:45,ca:2.8,p:1.9},
+  luzerne:{naam:'Luzernehooi',ds:88,ew:0.55,vre:120,ca:12,p:2.5},
+  eigen:{naam:'Eigen analyse…'}
+};
+const KRACHTVOER = {
+  sport:{naam:'Sportbrok',ew:0.95,vre:110,ca:9,p:5},
+  onderhoud:{naam:'Onderhoudsbrok',ew:0.85,vre:85,ca:8,p:5},
+  muesli:{naam:'Muesli',ew:0.90,vre:95,ca:7,p:5},
+  fokbrok:{naam:'Fokbrok (merrie/veulen)',ew:0.92,vre:140,ca:12,p:7},
+  vezel:{naam:'Vezelrijke brok / luzernebrok',ew:0.70,vre:90,ca:9,p:4},
+  haver:{naam:'Haver',ew:0.84,vre:80,ca:1,p:3.5},
+  eigen:{naam:'Eigen etiket…'}
+};
+
+/* ---------- init selects ---------- */
+function fillSelect(sel, obj){ $(sel).innerHTML = Object.entries(obj).map(([k,v])=>`<option value="${k}">${v.naam}</option>`).join(''); }
+fillSelect('rvPreset', RUWVOER); fillSelect('kvPreset', KRACHTVOER);
+
+function applyRv(){
+  const p = RUWVOER[$('rvPreset').value]; if(!p.ds) return;
+  $('rvBasis').value='product';
+  $('rvDS').value=p.ds; $('rvEW').value=p.ew; $('rvVRE').value=p.vre; $('rvCa').value=p.ca; $('rvP').value=p.p;
+}
+function applyKv(){
+  const p = KRACHTVOER[$('kvPreset').value]; if(p.ew===undefined) return;
+  $('kvEW').value=p.ew; $('kvVRE').value=p.vre; $('kvCa').value=p.ca; $('kvP').value=p.p;
+}
+$('rvPreset').addEventListener('change',()=>{applyRv();compute();});
+$('kvPreset').addEventListener('change',()=>{applyKv();compute();});
+['rvDS','rvEW','rvVRE','rvCa','rvP'].forEach(id=>$(id).addEventListener('input',()=>{$('rvPreset').value='eigen';}));
+['kvEW','kvVRE','kvCa','kvP'].forEach(id=>$(id).addEventListener('input',()=>{$('kvPreset').value='eigen';}));
+
+/* ---------- norm calc ---------- */
+function norms(lg, status, bcs){
+  const s = STATUS[status];
+  const met = Math.pow(lg, 0.75);
+  const ewOnd = 0.0335 * met;
+  const bcsF = bcs<=3 ? 1.10 : bcs>=7 ? 0.90 : 1.00;
+  const ew = ewOnd * s.f * bcsF;
+  const vre = ew * s.vre / bcsF; // eiwitbehoefte niet verlagen bij afvallen
+  const ca = 4 * lg/100 * s.min;
+  const p = 2.8 * lg/100 * s.min;
+  return {met, ewOnd, bcsF, ew, vre, ca, p, s};
+}
+
+/* ---------- weight helper ---------- */
+function weightEst(){
+  const o = num('omvang'), l = num('lengte');
+  let w, html;
+  if(l>0){ w = o*o*l/11880; html = `gewicht ≈ ${frac(`${o}² × ${l}`,'11 880')} = <b>${nf(w,0)} kg</b>`; }
+  else { w = Math.pow(o,3)/11877; html = `gewicht ≈ ${frac(`${o}³`,'11 877')} = <b>${nf(w,0)} kg</b>`; }
+  $('weightCalc').innerHTML = html; return Math.round(w/5)*5;
+}
+['omvang','lengte'].forEach(id=>$(id).addEventListener('input',weightEst));
+$('useWeight').addEventListener('click',()=>{ $('lg').value = weightEst(); compute(); });
+
+/* ---------- main compute ---------- */
+function compute(){
+  const lg = num('lg'), status=$('status').value, bcs=parseInt($('bcs').value);
+  const N = norms(lg,status,bcs);
+  const manual = $('manualNorm').checked;
+  ['nEW','nVRE','nCa','nP'].forEach(id=>$(id).disabled=!manual);
+  if(!manual){ $('nEW').value=N.ew.toFixed(2); $('nVRE').value=Math.round(N.vre); $('nCa').value=Math.round(N.ca); $('nP').value=Math.round(N.p); }
+  const need = {ew:num('nEW'), vre:num('nVRE'), ca:num('nCa'), p:num('nP')};
+
+  $('bcsHint').textContent = bcs<=3 ? 'Doel: aankomen → +10% energie.' : bcs>=7 ? 'Doel: afvallen → −10% energie, maar níét minder ruwvoer (kies energiearm hooi).' : 'Doel: op gewicht blijven.';
+
+  // ruwvoer gehalten per kg product
+  const dsF = num('rvDS')/100;
+  const basisDS = $('rvBasis').value==='ds';
+  const raw = {ew:num('rvEW'), vre:num('rvVRE'), ca:num('rvCa'), p:num('rvP')};
+  const rv = basisDS ? {ew:raw.ew*dsF, vre:raw.vre*dsF, ca:raw.ca*dsF, p:raw.p*dsF} : raw;
+
+  const pct = parseFloat($('dsPct').value); $('dsPctVal').textContent = nf(pct,1)+'%';
+  const dsNeed = pct/100*lg;
+  const prodExact = dsNeed / (dsF||1);
+  const r = $('rvRound').value;
+  $('rvManual').style.display = r==='manual'?'block':'none';
+  let rvKg = r==='manual' ? num('rvManual') : (r==='0.1' ? Math.round(prodExact*10)/10 : ceilTo(prodExact, parseFloat(r)));
+  if(r==='manual' && !$('rvManual').value){ rvKg = ceilTo(prodExact,0.5); }
+
+  const rvSup = {ew:rvKg*rv.ew, vre:rvKg*rv.vre, ca:rvKg*rv.ca, p:rvKg*rv.p};
+  const bal = {kg:num('balG')/1000, ew:num('balEW'), vre:num('balVRE'), ca:num('balCa'), p:num('balP')};
+  const balSup = {ew:bal.kg*bal.ew, vre:bal.kg*bal.vre, ca:bal.kg*bal.ca, p:bal.kg*bal.p};
+  const saldo1 = {ew: rvSup.ew + balSup.ew - need.ew, vre: rvSup.vre + balSup.vre - need.vre};
+
+  const kv = {ew:num('kvEW'), vre:num('kvVRE'), ca:num('kvCa'), p:num('kvP')};
+  const kgEW = saldo1.ew<0 && kv.ew>0 ? -saldo1.ew/kv.ew : 0;
+  const kgVRE = saldo1.vre<0 && kv.vre>0 ? -saldo1.vre/kv.vre : 0;
+  const kvExact = Math.max(kgEW,kgVRE);
+  const kvKg = kvExact>0 ? ceilTo(kvExact,0.1) : 0;
+  const kvSup = {ew:kvKg*kv.ew, vre:kvKg*kv.vre, ca:kvKg*kv.ca, p:kvKg*kv.p};
+
+  const tot = {}; ['ew','vre','ca','p'].forEach(k=>tot[k]=rvSup[k]+balSup[k]+kvSup[k]);
+  const caP = tot.p>0 ? tot.ca/tot.p : 0;
+
+  render({lg,status,bcs,N,need,manual,dsF,basisDS,raw,rv,pct,dsNeed,prodExact,rvKg,rvSup,bal,balSup,saldo1,kv,kgEW,kgVRE,kvExact,kvKg,kvSup,tot,caP});
+}
+
+function chip(v, unit, d){ const cls = v>=0 ? 'ok':'bad'; return `<span class="chip ${cls}">${v>=0?'+':'−'} ${nf(Math.abs(v),d)} ${unit}</span>`; }
+
+function render(c){
+  const rvName = RUWVOER[$('rvPreset').value].naam.split(' (')[0].toLowerCase();
+  const kvName = KRACHTVOER[$('kvPreset').value].naam.split(' (')[0].toLowerCase();
+  const naam = $('naam').value.trim();
+  $('horseTitle').textContent = naam ? `– ${naam}` : '';
+
+  // tiles
+  const dsTot = c.rvKg*c.dsF + c.kvKg*0.88 + c.bal.kg*0.9;
+  $('tiles').innerHTML = `
+    <div class="tile"><div class="k">🌾 Ruwvoer</div><div class="v">${nf(c.rvKg,1)} kg</div><div class="s">${rvName} per dag</div></div>
+    <div class="tile"><div class="k">🥣 Krachtvoer</div><div class="v">${nf(c.kvKg,1)} kg</div><div class="s">${c.kvKg>0?kvName:'niet nodig 👍'}</div></div>
+    <div class="tile"><div class="k">⚡ Energie</div><div class="v">${nf(c.tot.ew/c.need.ew*100,0)}%</div><div class="s">${nf(c.tot.ew)} van ${nf(c.need.ew)} EWpa</div></div>
+    <div class="tile"><div class="k">💪 Eiwit</div><div class="v">${nf(c.tot.vre/c.need.vre*100,0)}%</div><div class="s">${nf(c.tot.vre,0)} van ${nf(c.need.vre,0)} g VREp</div></div>`;
+
+  // ration table + bars
+  const row = (n,kg,s)=>`<tr><td>${n}</td><td>${nf(kg,kg<1?2:1)} kg</td><td>${nf(s.ew)}</td><td>${nf(s.vre,0)}</td><td>${nf(s.ca,1)}</td><td>${nf(s.p,1)}</td></tr>`;
+  const bar = (lbl,val,need,unit,d,color)=>{
+    const max = Math.max(val,need)*1.25||1;
+    return `<div class="bar"><div class="lbl"><span>${lbl}</span><span>${nf(val,d)} / ${nf(need,d)} ${unit}</span></div>
+      <div class="track"><div class="fill" style="width:${val/max*100}%;background:${color}"></div><div class="target" style="left:${need/max*100}%" title="behoefte"></div></div></div>`;
+  };
+  $('ration').innerHTML = `
+    <table>
+      <tr><th>Voedermiddel</th><th>Hoeveelheid</th><th>EWpa</th><th>VREp (g)</th><th>Ca (g)</th><th>P (g)</th></tr>
+      ${row('🌾 '+RUWVOER[$('rvPreset').value].naam, c.rvKg, c.rvSup)}
+      ${c.kvKg>0?row('🥣 '+KRACHTVOER[$('kvPreset').value].naam, c.kvKg, c.kvSup):''}
+      ${c.bal.kg>0?row('💊 Balancer / mineralen', c.bal.kg, c.balSup):''}
+      <tr class="total"><td>Totaal aanbod</td><td></td><td>${nf(c.tot.ew)}</td><td>${nf(c.tot.vre,0)}</td><td>${nf(c.tot.ca,1)}</td><td>${nf(c.tot.p,1)}</td></tr>
+      <tr><td>Behoefte</td><td></td><td>${nf(c.need.ew)}</td><td>${nf(c.need.vre,0)}</td><td>${nf(c.need.ca,0)}</td><td>${nf(c.need.p,0)}</td></tr>
+      <tr><td><b>Saldo</b></td><td></td><td>${chip(c.tot.ew-c.need.ew,'',2)}</td><td>${chip(c.tot.vre-c.need.vre,'',0)}</td><td>${chip(c.tot.ca-c.need.ca,'',1)}</td><td>${chip(c.tot.p-c.need.p,'',1)}</td></tr>
+    </table>
+    <div class="bars">
+      ${bar('⚡ Energie (EWpa)',c.tot.ew,c.need.ew,'EWpa',2,'var(--hay)')}
+      ${bar('💪 Eiwit (VREp)',c.tot.vre,c.need.vre,'g',0,'var(--blue)')}
+      ${bar('🌾 Droge stof ruwvoer',c.rvKg*c.dsF,c.dsNeed,'kg DS',1,'var(--green)')}
+    </div>
+    <div class="hint">Zwart streepje = behoefte (norm). Totale DS-opname ± ${nf(dsTot,1)} kg (${nf(dsTot/c.lg*100,1)}% van LG).</div>`;
+
+  // steps
+  const N=c.N, S=N.s; let st='';
+  const stepH = (n,t,body)=>`<div class="step"><div class="num">${n}</div><div><h3>${t}</h3>${body}</div></div>`;
+  let s1;
+  if(c.manual){
+    s1 = `<p class="why">Normen ingevuld vanuit de CVB-tabel.</p><div class="calc">Energie: <span class="res">${nf(c.need.ew)} EWpa</span> &nbsp;|&nbsp; Eiwit: <span class="res">${nf(c.need.vre,0)} g VREp</span></div>`;
+  } else {
+    s1 = `<p class="why">Onderhoudsbehoefte hangt af van het metabolisch gewicht (LG<sup>0,75</sup>); daarna komt de toeslag voor ${S.naam} (factor ${nf(S.f)}).</p>
+    <div class="calc">LG<sup>0,75</sup> = ${c.lg}<sup>0,75</sup> = ${nf(N.met,1)} kg</div>
+    <div class="calc">EWpa onderhoud = 0,0335 × ${nf(N.met,1)} = ${nf(N.ewOnd)} EWpa</div>
+    <div class="calc">EWpa totaal = ${nf(N.ewOnd)} × ${nf(S.f)}${N.bcsF!==1?` × ${nf(N.bcsF)} (BCS)`:''} = <span class="res">${nf(N.ew)} EWpa</span></div>
+    <div class="calc">VREp = ${nf(N.ew/N.bcsF)} EWpa × ${S.vre} g/EWpa = <span class="res">${nf(N.vre,0)} g VREp</span></div>`;
+  }
+  st += stepH(1,'Bepaal de dagelijkse behoefte',s1);
+
+  st += stepH(2,'Minimale hoeveelheid ruwvoer (in droge stof)',`
+    <p class="why">Vezels zijn nodig voor een gezonde darmwerking. Uitgangspunt: ${nf(c.pct,1)}% van het lichaamsgewicht aan droge stof.</p>
+    <div class="calc">DS-behoefte = ${nf(c.pct/100,3)} × ${c.lg} kg = <span class="res">${nf(c.dsNeed,2)} kg DS</span></div>
+    <p class="why">Het ruwvoer bevat ${nf(c.dsF*100,0)}% droge stof (${nf(c.dsF,2)}). Omrekenen naar kg product:</p>
+    <div class="calc">kg product = ${frac(nf(c.dsNeed,2)+' kg DS',nf(c.dsF,2))} = ${nf(c.prodExact,2)} kg &nbsp;→&nbsp; afgerond <span class="res">${nf(c.rvKg,1)} kg ${rvName}</span></div>`);
+
+  let conv = '';
+  if(c.basisDS){
+    conv = `<p class="why">De analyse is per kg DS; eerst omrekenen naar per kg product (× ${nf(c.dsF,2)}):</p>
+    <div class="calc">EWpa: ${nf(c.raw.ew)} × ${nf(c.dsF,2)} = ${nf(c.rv.ew,3)} /kg &nbsp;|&nbsp; VREp: ${nf(c.raw.vre,0)} × ${nf(c.dsF,2)} = ${nf(c.rv.vre,1)} g/kg</div>`;
+  }
+  st += stepH(3,'Wat levert het ruwvoer?',`${conv}
+    <p class="why">Gehalte per kg product: ${nf(c.rv.ew,2)} EWpa en ${nf(c.rv.vre,0)} g VREp. Bij ${nf(c.rvKg,1)} kg:</p>
+    <div class="calc">Energie: ${nf(c.rvKg,1)} × ${nf(c.rv.ew,2)} = <span class="res">${nf(c.rvSup.ew)} EWpa</span></div>
+    <div class="calc">Eiwit: ${nf(c.rvKg,1)} × ${nf(c.rv.vre,0)} = <span class="res">${nf(c.rvSup.vre,0)} g VREp</span></div>
+    ${c.bal.kg>0?`<p class="why">Balancer (${nf(c.bal.kg,2)} kg) levert daarnaast ${nf(c.balSup.ew)} EWpa en ${nf(c.balSup.vre,0)} g VREp.</p>`:''}`);
+
+  const s1ew = c.saldo1.ew, s1vre=c.saldo1.vre;
+  st += stepH(4,'Vergelijk aanbod met behoefte',`
+    <table>
+      <tr><th>Component</th><th>Behoefte</th><th>Aanbod (ruwvoer${c.bal.kg>0?' + balancer':''})</th><th>Saldo</th></tr>
+      <tr><td>EWpa</td><td>${nf(c.need.ew)}</td><td>${nf(c.rvSup.ew+c.balSup.ew)}</td><td>${chip(s1ew,'EWpa',2)}</td></tr>
+      <tr><td>VREp</td><td>${nf(c.need.vre,0)} g</td><td>${nf(c.rvSup.vre+c.balSup.vre,0)} g</td><td>${chip(s1vre,'g',0)}</td></tr>
+    </table>
+    <p class="why">Saldo = aanbod − behoefte. ${s1ew>=0&&s1vre>=0?'Beide positief: het ruwvoer dekt de behoefte.':'Een negatief saldo is een tekort dat aangevuld moet worden.'}</p>`);
+
+  let s5;
+  if(c.kvKg>0){
+    s5 = `<p class="why">Er is een tekort. Krachtvoer: ${KRACHTVOER[$('kvPreset').value].naam} (${nf(c.kv.ew,2)} EWpa en ${nf(c.kv.vre,0)} g VREp per kg).</p>
+    ${c.kgEW>0?`<div class="calc">voor energie: ${frac(nf(-s1ew)+' EWpa tekort',nf(c.kv.ew,2)+' EWpa/kg')} = ${nf(c.kgEW,2)} kg</div>`:''}
+    ${c.kgVRE>0?`<div class="calc">voor eiwit: ${frac(nf(-s1vre,0)+' g tekort',nf(c.kv.vre,0)+' g/kg')} = ${nf(c.kgVRE,2)} kg</div>`:''}
+    <div class="calc">Benodigd = grootste van beide = ${nf(c.kvExact,2)} kg → afgerond <span class="res">${nf(c.kvKg,1)} kg ${kvName}</span></div>
+    ${c.kgEW>0&&c.kgVRE>0?'':`<p class="why">${c.kgEW>0?'Alleen energie is tekort.':'Alleen eiwit is tekort – een eiwitrijk/energiearm product (bijv. luzerne of balancer) is vaak slimmer dan een gewone brok.'}</p>`}`;
+  } else {
+    s5 = `<div class="alert ok">✅ <div>Er is <b>geen tekort</b> aan energie of eiwit. Traditioneel krachtvoer (brok/muesli) is overbodig en leidt alleen tot vervetting.</div></div>
+    <p class="why">Ruwvoer dekt zelden alle sporenelementen (selenium, koper, zink) en vitamine E → kies een balancer of mineralenkoek (100–200 g) en een zoutblok/los zout.</p>`;
+  }
+  st += stepH(5,'Krachtvoer en aanvullingen bepalen',s5);
+
+  st += stepH(6,'Controleer de Ca : P-verhouding',`
+    <div class="calc">Ca totaal = ${[c.rvSup.ca,c.kvSup.ca,c.balSup.ca].filter(x=>x>0).map(x=>nf(x,1)).join(' + ')} = ${nf(c.tot.ca,1)} g</div>
+    <div class="calc">P totaal = ${[c.rvSup.p,c.kvSup.p,c.balSup.p].filter(x=>x>0).map(x=>nf(x,1)).join(' + ')} = ${nf(c.tot.p,1)} g</div>
+    <div class="calc">Ca : P = ${frac(nf(c.tot.ca,1),nf(c.tot.p,1))} = <span class="res">${nf(c.caP,2)} : 1</span></div>`);
+  $('steps').innerHTML = st;
+
+  // Ca:P gauge (scale 0.5 – 3.5)
+  const pos = Math.min(100,Math.max(0,(c.caP-0.5)/3*100));
+  let verdict, cls;
+  if(c.caP<1.2){verdict='Te laag – meer calcium nodig (bijv. luzerne, kalkrijke balancer). Risico op botproblemen.';cls='bad';}
+  else if(c.caP<1.5){verdict='Acceptabel, maar aan de lage kant (minimaal 1,2 : 1).';cls='warn';}
+  else if(c.caP<=2.0){verdict='Ideaal (1,5 : 1 – 2 : 1).';cls='ok';}
+  else if(c.caP<=3.0){verdict='Acceptabel voor een volwassen paard (max. 3 : 1).';cls='warn';}
+  else {verdict='Te hoog – te veel calcium t.o.v. fosfor.';cls='bad';}
+  // gauge segments must match 0.5..3.5 scale: 1.2→23.3%, 1.5→33.3%, 2.0→50%, 3.0→83.3%
+  $('caP').innerHTML = `
+    <div style="display:flex;justify-content:space-between;align-items:baseline"><div style="font-size:1.6rem;font-weight:800">${nf(c.caP,2)} : 1</div><span class="chip ${cls}">${cls==='ok'?'In orde':cls==='warn'?'Let op':'Aanpassen'}</span></div>
+    <div class="gauge" style="background:linear-gradient(90deg,#e8a798 0 23.3%,#f3d48a 23.3% 33.3%,#a8d5ad 33.3% 50%,#f3d48a 50% 83.3%,#e8a798 83.3% 100%)"><div class="pin" style="left:calc(${pos}% - 2px)"></div></div>
+    <div class="gauge-scale"><span>0,5</span><span>1,2</span><span>1,5</span><span>2,0</span><span>2,5</span><span>3,0</span><span>3,5</span></div>
+    <div class="alert ${cls}" style="margin-top:10px">${verdict}</div>
+    <p class="hint">Ca: ${nf(c.tot.ca,1)} g (behoefte ± ${nf(c.need.ca,0)} g) · P: ${nf(c.tot.p,1)} g (behoefte ± ${nf(c.need.p,0)} g)</p>`;
+  // fix scale label positions to proportional
+  const sc = $('caP').querySelector('.gauge-scale'); sc.style.position='relative'; sc.style.height='16px';
+  sc.innerHTML = [0.5,1.2,1.5,2,2.5,3,3.5].map(v=>`<span style="position:absolute;left:${(v-0.5)/3*100}%;transform:translateX(-50%)">${nf(v,1)}</span>`).join('');
+
+  // advice
+  const adv = [];
+  const rvPct = c.rvKg*c.dsF/c.lg*100;
+  if(rvPct<1.2) adv.push(['bad',`🚨 Ruwvoer levert maar ${nf(rvPct,2)}% DS van het lichaamsgewicht – onder het absolute minimum van 1,2%. Risico op koliek, maagzweren en stereotiep gedrag.`]);
+  else if(rvPct<1.5) adv.push(['warn',`Ruwvoer levert ${nf(rvPct,2)}% DS van het LG. Liefst minimaal 1,5%.`]);
+  else adv.push(['ok',`Ruwvoer: ${nf(rvPct,2)}% DS van het lichaamsgewicht – voldoende vezels.`]);
+  const ewOver = (c.tot.ew-c.need.ew)/c.need.ew;
+  if(ewOver>0.15) adv.push(['warn',`Energie-overschot van ${nf(ewOver*100,0)}%. ${c.bcs>=7?'Dit paard moet juist afvallen! ':''}Overweeg energiearmer (later gemaaid) hooi, of meng met stro – zonder de hoeveelheid DS te verlagen.`]);
+  else if(ewOver<-0.02) adv.push(['bad','Energie wordt niet gedekt – controleer krachtvoer of gegevens.']);
+  else adv.push(['ok','Energiebalans is in orde.']);
+  const vreOver = (c.tot.vre-c.need.vre)/c.need.vre;
+  if(vreOver>0.5) adv.push(['warn',`Eiwit-overschot van ${nf(vreOver*100,0)}%. Overtollig eiwit wordt uitgescheiden als ureum (belasting lever/nieren, ammoniaklucht in de stal).`]);
+  const maxMeal = 0.5*c.lg/100;
+  if(c.kvKg>0){
+    const meals = Math.max(1,Math.ceil(c.kvKg/maxMeal - 1e-9));
+    adv.push(['info',`Krachtvoer: max. ± ${nf(maxMeal,1)} kg per maaltijd (0,5 kg/100 kg LG). Verdeel ${nf(c.kvKg,1)} kg over minstens ${meals} maaltijd${meals>1?'en':''}.`]);
+  }
+  if(c.bal.kg===0) adv.push(['warn','Geen balancer/mineralen in het rantsoen. Ruwvoer dekt zelden selenium, koper, zink en vitamine E.']);
+  adv.push(['info',`Verdeel ${nf(c.rvKg,1)} kg ruwvoer over de dag (bijv. ${nf(c.rvKg/3,1)} kg × 3 in een fijnmazig hooinet) en weeg na met een unster. Zorg voor zout en vers water (± ${nf(c.lg*0.05,0)}–${nf(c.lg*0.08,0)} L per dag).`]);
+  $('advice').innerHTML = adv.map(([k,t])=>`<div class="alert ${k}">${t}</div>`).join('');
+}
+
+/* ---------- events ---------- */
+document.querySelectorAll('#pane-inputs input, #pane-inputs select').forEach(el=>{
+  el.addEventListener('input',compute); el.addEventListener('change',compute);
+});
+$('rvBasis').addEventListener('change',()=>{
+  // converteer de ingevulde waarden mee zodat het voer hetzelfde blijft
+  const f = num('rvDS')/100; if(!f) return;
+  const toDS = $('rvBasis').value==='ds';
+  ['rvEW','rvVRE','rvCa','rvP'].forEach(id=>{ const v=num(id); const nv = toDS? v/f : v*f; $(id).value = +nv.toFixed(id==='rvEW'?3:1); });
+  compute();
+});
+function loadExample(){
+  $('naam').value=''; $('lg').value=600; $('bcs').value='5'; $('status').value='licht';
+  $('manualNorm').checked=true; $('nEW').value=4.8; $('nVRE').value=360; $('nCa').value=26; $('nP').value=18;
+  $('dsPct').value=1.5; $('rvPreset').value='hooi'; applyRv(); $('rvRound').value='0.5';
+  $('kvPreset').value='sport'; applyKv(); $('balG').value=150;
+  compute();
+}
+$('resetEx').addEventListener('click',loadExample);
+$('manualNorm').addEventListener('change',()=>{ if(!$('manualNorm').checked) compute(); });
+
+document.querySelectorAll('.tab').forEach(t=>t.addEventListener('click',()=>{
+  document.querySelectorAll('.tab').forEach(x=>x.classList.toggle('active',x===t));
+  document.querySelectorAll('.page').forEach(p=>p.classList.toggle('active',p.id==='page-'+t.dataset.page));
+}));
+
+/* ---------- oefenen ---------- */
+let EX=null;
+const rnd = (a,b,s=1)=> Math.round((a+Math.random()*(b-a))/s)*s;
+function newExercise(){
+  const names=['Bella','Storm','Luna','Duke','Fleur','Joep','Sasha','Max','Nova','Kees'];
+  const lg = rnd(450,700,10), ds = rnd(80,90,1), ew = rnd(0.45,0.62,0.01), vre = rnd(25,55,1);
+  const pct = [1.5,1.5,1.6,1.8,2.0][rnd(0,4)];
+  const st = ['onderhoud','licht','matig','zwaar'][rnd(0,3)];
+  const N = norms(lg,st,5);
+  const needEW = Math.round(N.ew*10)/10, needVRE = Math.round(N.vre/5)*5;
+  const kvEW = [0.85,0.9,0.95][rnd(0,2)];
+  const dsNeed = pct/100*lg, prod = dsNeed/(ds/100), kg = Math.ceil(prod*2-1e-9)/2;
+  const supEW = kg*ew, supVRE = kg*vre, saldo = supEW-needEW;
+  const kvKg = saldo<0 ? -saldo/kvEW : 0;
+  EX = {name:names[rnd(0,9)],lg,ds,ew,vre,pct,st,needEW,needVRE,kvEW,dsNeed,prod,kg,supEW,supVRE,saldo,kvKg,saldoVRE:supVRE-needVRE};
+  $('casus').innerHTML = `<div class="alert info">🐴 <div><b>${EX.name}</b> weegt <b>${lg} kg</b> en verricht <b>${STATUS[st].naam}</b>.
+    Volgens de CVB-tabel is de behoefte <b>${nf(needEW,1)} EWpa</b> en <b>${needVRE} g VREp</b> per dag.<br>
+    Het hooi bevat <b>${ds}% DS</b>, <b>${nf(ew,2)} EWpa</b> en <b>${vre} g VREp</b> per kg product.
+    Je geeft <b>${nf(pct,1)}%</b> van het lichaamsgewicht aan droge stof. Rond de hoeveelheid hooi naar boven af op 0,5 kg.
+    De brok bevat <b>${nf(kvEW,2)} EWpa</b> per kg.</div></div>`;
+  const qs = [
+    ['q1','a. Hoeveel kg droge stof uit ruwvoer heeft het paard minimaal nodig?','kg DS'],
+    ['q2','b. Hoeveel kg hooi (product) geef je, afgerond naar boven op 0,5 kg?','kg hooi'],
+    ['q3','c. Hoeveel EWpa levert deze hoeveelheid hooi?','EWpa'],
+    ['q4','d. Hoeveel g VREp levert het hooi?','g VREp'],
+    ['q5','e. Wat is het saldo voor energie? (tekort = negatief getal)','EWpa'],
+    ['q6','f. Hoeveel kg brok is nodig? (0 als er geen tekort is)','kg brok']
+  ];
+  $('questions').innerHTML = qs.map(([id,q,u])=>`<div class="q"><div>${q}</div><input id="${id}" inputmode="decimal"> ${u} <span class="fb" id="${id}fb"></span></div>`).join('');
+  $('exScore').innerHTML=''; $('exSolution').innerHTML='';
+}
+function checkExercise(){
+  const ans = {q1:[EX.dsNeed,0.06],q2:[EX.kg,0.01],q3:[EX.supEW,0.06],q4:[EX.supVRE,2],q5:[EX.saldo,0.08],q6:[EX.kvKg,0.08]};
+  let ok=0;
+  Object.entries(ans).forEach(([id,[v,tol]])=>{
+    const raw=$(id).value.trim().replace(',','.'); const g=parseFloat(raw);
+    const good = raw!=='' && Math.abs(g-v)<=tol+1e-9;
+    $(id+'fb').innerHTML = raw===''?'':good?'<span style="color:var(--green)">✔ goed</span>':'<span style="color:var(--red)">✘ nog niet</span>';
+    if(good) ok++;
+  });
+  $('exScore').innerHTML = `<div class="alert ${ok===6?'ok':ok>=3?'warn':'bad'}">Score: <b>${ok} / 6</b> ${ok===6?'🏆 Uitstekend!':''}</div>`;
+}
+function showSolution(){
+  const e=EX;
+  $('exSolution').innerHTML = `<h3>Uitwerking</h3>
+    <div class="calc">a. ${nf(e.pct/100,3)} × ${e.lg} = <span class="res">${nf(e.dsNeed,2)} kg DS</span></div>
+    <div class="calc">b. ${frac(nf(e.dsNeed,2),nf(e.ds/100,2))} = ${nf(e.prod,2)} kg → <span class="res">${nf(e.kg,1)} kg hooi</span></div>
+    <div class="calc">c. ${nf(e.kg,1)} × ${nf(e.ew,2)} = <span class="res">${nf(e.supEW,2)} EWpa</span></div>
+    <div class="calc">d. ${nf(e.kg,1)} × ${e.vre} = <span class="res">${nf(e.supVRE,0)} g VREp</span> (saldo eiwit: ${nf(e.saldoVRE,0)} g)</div>
+    <div class="calc">e. ${nf(e.supEW,2)} − ${nf(e.needEW,1)} = <span class="res">${nf(e.saldo,2)} EWpa</span></div>
+    <div class="calc">f. ${e.saldo<0?`${frac(nf(-e.saldo,2),nf(e.kvEW,2))} = <span class="res">${nf(e.kvKg,2)} kg brok</span>`:'<span class="res">0 kg</span> – geen energietekort, dus geen krachtvoer (wel balancer + zout).'}</div>`;
+}
+$('newEx').addEventListener('click',newExercise);
+$('checkEx').addEventListener('click',checkExercise);
+$('showEx').addEventListener('click',showSolution);
+
+/* ---------- start ---------- */
+weightEst();
+loadExample();
+newExercise();
+</script>
+</body>
+</html>
